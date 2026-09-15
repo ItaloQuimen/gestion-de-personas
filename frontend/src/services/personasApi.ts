@@ -25,3 +25,17 @@ export async function crearPersona(persona: Omit<Persona, 'id'>): Promise<Person
 
   return response.json() as Promise<Persona>
 }
+
+export async function actualizarPersona(id: number, persona: Omit<Persona, 'id'>): Promise<Persona> {
+  const response = await fetch(`${PERSONAS_ENDPOINT}/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(persona),
+  })
+
+  if (!response.ok) {
+    throw new Error(`La actualización de la persona respondió ${response.status}.`)
+  }
+
+  return response.json() as Promise<Persona>
+}

@@ -2,9 +2,10 @@ import type { Persona } from '../types/persona'
 
 type TarjetaPersonaProps = {
   persona: Persona
+  onEditar: (persona: Persona) => void
 }
 
-export function TarjetaPersona({ persona }: TarjetaPersonaProps) {
+export function TarjetaPersona({ persona, onEditar }: TarjetaPersonaProps) {
   return (
     <li className="person-card">
       <h2>{persona.nombre} {persona.apellido}</h2>
@@ -26,6 +27,7 @@ export function TarjetaPersona({ persona }: TarjetaPersonaProps) {
           <dd>{persona.direccion.comuna}, {persona.direccion.region}</dd>
         </div>
       </dl>
+      <button type="button" onClick={() => onEditar(persona)}>Editar</button>
     </li>
   )
 }

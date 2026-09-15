@@ -7,6 +7,7 @@ import './App.css'
 
 function App() {
   const [personas, setPersonas] = useState<Persona[]>([])
+  const [personaEnEdicion, setPersonaEnEdicion] = useState<Persona | null>(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -39,10 +40,19 @@ function App() {
         <h1>Personas</h1>
         <p className="intro">Consulta la información de las personas registradas.</p>
       </header>
-      <FormularioPersona onPersonaCreada={(persona) => setPersonas((actuales) => [...actuales, persona])} />
+      <FormularioPersona
+        personaEnEdicion={personaEnEdicion}
+        onPersonaGuardada={(persona) => {
+          setPersonas((actuales) => personaEnEdicion
+            ? actuales.map((actual) => actual.id === persona.id ? persona : actual)
+            : [...actuales, persona])
+          setPersonaEnEdicion(null)
+        }}
+        onCancelarEdicion={() => setPersonaEnEdicion(null)}
+      />
       {cargando && <p role="status">Cargando personas...</p>}
       {error && <p role="alert">{error}</p>}
-      {!cargando && !error && <ListaPersonas personas={personas} />}
+      {!cargando && !error && <ListaPersonas personas={personas} onEditar={setPersonaEnEdicion} />}
     </main>
   )
 }

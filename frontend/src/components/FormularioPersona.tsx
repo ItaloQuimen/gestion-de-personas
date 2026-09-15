@@ -1,9 +1,11 @@
-import { useState, type FormEvent } from 'react'
-import { crearPersona } from '../services/personasApi'
+import { startTransition, useEffect, useState, type FormEvent } from 'react'
+import { actualizarPersona, crearPersona } from '../services/personasApi'
 import type { Persona } from '../types/persona'
 
 type FormularioPersonaProps = {
-  onPersonaCreada: (persona: Persona) => void
+  personaEnEdicion: Persona | null
+  onPersonaGuardada: (persona: Persona) => void
+  onCancelarEdicion: () => void
 }
 
 type DatosFormulario = Omit<Persona, 'id'>
@@ -45,11 +47,29 @@ function validarFormulario(datos: DatosFormulario): string | null {
   return null
 }
 
-export function FormularioPersona({ onPersonaCreada }: FormularioPersonaProps) {
-  const [datos, setDatos] = useState(formularioInicial)
+export function FormularioPersona({ personaEnEdicion, onPersonaGuardada, onCancelarEdicion }: FormularioPersonaProps) {
+  const [datos, setDatos] = useState<DatosFormulario>(formularioInicial)
   const [enviando, setEnviando] = useState(false)
   const [mensaje, setMensaje] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (personaEnEdicion) {
+      startTransition(() => {
+        setDatos({
+          rut: personaEnEdicion.rut,
+          nombre: personaEnEdicion.nombre,
+          apellido: personaEnEdicion.apellido,
+          fechaNacimiento: personaEnEdicion.fechaNacimiento,
+          direccion: personaEnEdicion.direccion,
+        })
+        setMensaje(null)
+        setError(null)
+      })
+    } else {
+      startTransition(() => setDatos(formularioInicial))
+    }
+  }, [personaEnEdicion])
 
   function actualizarCampo(campo: keyof DatosFormulario, valor: string) {
     setDatos((actuales) => ({ ...actuales, [campo]: valor }))
@@ -75,20 +95,29 @@ export function FormularioPersona({ onPersonaCreada }: FormularioPersonaProps) {
 
     setEnviando(true)
     try {
-      const personaCreada = await crearPersona(datos)
-      onPersonaCreada(personaCreada)
+      const personaGuardada = personaEnEdicion
+        ? await actualizarPersona(personaEnEdicion.id, datos)
+        : await crearPersona(datos)
+      onPersonaGuardada(personaGuardada)
       setDatos(formularioInicial)
-      setMensaje('Persona creada correctamente.')
+      setMensaje(personaEnEdicion ? 'Persona actualizada correctamente.' : 'Persona creada correctamente.')
     } catch {
-      setError('No fue posible crear la persona.')
+      setError(personaEnEdicion ? 'No fue posible actualizar la persona.' : 'No fue posible crear la persona.')
     } finally {
       setEnviando(false)
     }
   }
 
+  function manejarCancelacion() {
+    setDatos(formularioInicial)
+    setMensaje(null)
+    setError(null)
+    onCancelarEdicion()
+  }
+
   return (
     <section className="form-section" aria-labelledby="form-title">
-      <h2 id="form-title">Registrar persona</h2>
+      <h2 id="form-title">{personaEnEdicion ? 'Editar persona' : 'Registrar persona'}</h2>
       <form onSubmit={manejarEnvio}>
         <div className="form-grid">
           <label>RUT<input required value={datos.rut} onChange={(event) => actualizarCampo('rut', event.target.value)} /></label>
@@ -99,7 +128,8 @@ export function FormularioPersona({ onPersonaCreada }: FormularioPersonaProps) {
           <label>Comuna<input required value={datos.direccion.comuna} onChange={(event) => actualizarDireccion('comuna', event.target.value)} /></label>
           <label>Región<input required value={datos.direccion.region} onChange={(event) => actualizarDireccion('region', event.target.value)} /></label>
         </div>
-        <button type="submit" disabled={enviando}>{enviando ? 'Guardando...' : 'Guardar persona'}</button>
+        <button type="submit" disabled={enviando}>{enviando ? 'Guardando...' : personaEnEdicion ? 'Guardar cambios' : 'Guardar persona'}</button>
+        {personaEnEdicion && <button type="button" onClick={manejarCancelacion} disabled={enviando}>Cancelar</button>}
         {mensaje && <p className="form-success" role="status">{mensaje}</p>}
         {error && <p className="form-error" role="alert">{error}</p>}
       </form>
