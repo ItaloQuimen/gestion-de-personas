@@ -1,0 +1,51 @@
+# Archivos generados y registros locales
+**/target/
+**/out/
+**/build/
+**/dist/
+**/node_modules/
+**/coverage/
+*.class
+*.log
+*.hprof
+*.jfr
+
+# Configuraciones privadas de los IDEs y herramientas locales
+.idea/
+.run/
+.vscode/
+*.iml
+*.iws
+*.ipr
+*.code-workspace
+.codex/
+
+# Credenciales y configuraciones locales (los ejemplos deben carecer de secretos)
+.env
+.env.*
+!.env.example
+!.env.sample
+*.clixml
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+.my.cnf
+.mylogin.cnf
+settings.xml
+application-local.properties
+application-local.yml
+application-local.yaml
+application-secrets.properties
+application-secrets.yml
+application-secrets.yaml
+secrets/
+credentials/
+
+# Archivos temporales del sistema
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.tmp
+*.bak
