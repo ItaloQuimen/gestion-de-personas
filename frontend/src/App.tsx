@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { FormularioPersona } from './components/FormularioPersona'
 import { ListaPersonas } from './components/ListaPersonas'
-import { obtenerPersonas } from './services/personasApi'
+import { eliminarPersona, obtenerPersonas } from './services/personasApi'
 import type { Persona } from './types/persona'
 import './App.css'
 
@@ -10,6 +10,7 @@ function App() {
   const [personaEnEdicion, setPersonaEnEdicion] = useState<Persona | null>(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [errorEliminacion, setErrorEliminacion] = useState<string | null>(null)
 
   useEffect(() => {
     let activo = true
@@ -33,6 +34,21 @@ function App() {
     }
   }, [])
 
+  async function manejarEliminacion(persona: Persona) {
+    const confirmado = window.confirm(`¿Quieres eliminar a ${persona.nombre} ${persona.apellido}?`)
+    if (!confirmado) {
+      return
+    }
+
+    setErrorEliminacion(null)
+    try {
+      await eliminarPersona(persona.id)
+      setPersonas((actuales) => actuales.filter((actual) => actual.id !== persona.id))
+    } catch {
+      setErrorEliminacion('No fue posible eliminar la persona.')
+    }
+  }
+
   return (
     <main className="app-shell">
       <header className="app-header">
@@ -52,7 +68,8 @@ function App() {
       />
       {cargando && <p role="status">Cargando personas...</p>}
       {error && <p role="alert">{error}</p>}
-      {!cargando && !error && <ListaPersonas personas={personas} onEditar={setPersonaEnEdicion} />}
+      {errorEliminacion && <p role="alert">{errorEliminacion}</p>}
+      {!cargando && !error && <ListaPersonas personas={personas} onEditar={setPersonaEnEdicion} onEliminar={manejarEliminacion} />}
     </main>
   )
 }

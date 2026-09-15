@@ -3,9 +3,10 @@ import type { Persona } from '../types/persona'
 type TarjetaPersonaProps = {
   persona: Persona
   onEditar: (persona: Persona) => void
+  onEliminar: (persona: Persona) => void
 }
 
-export function TarjetaPersona({ persona, onEditar }: TarjetaPersonaProps) {
+export function TarjetaPersona({ persona, onEditar, onEliminar }: TarjetaPersonaProps) {
   return (
     <li className="person-card">
       <h2>{persona.nombre} {persona.apellido}</h2>
@@ -28,6 +29,7 @@ export function TarjetaPersona({ persona, onEditar }: TarjetaPersonaProps) {
         </div>
       </dl>
       <button type="button" onClick={() => onEditar(persona)}>Editar</button>
+      <button type="button" onClick={() => onEliminar(persona)}>Eliminar</button>
     </li>
   )
 }

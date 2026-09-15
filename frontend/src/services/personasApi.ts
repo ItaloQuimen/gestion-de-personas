@@ -39,3 +39,11 @@ export async function actualizarPersona(id: number, persona: Omit<Persona, 'id'>
 
   return response.json() as Promise<Persona>
 }
+
+export async function eliminarPersona(id: number): Promise<void> {
+  const response = await fetch(`${PERSONAS_ENDPOINT}/${id}`, { method: 'DELETE' })
+
+  if (!response.ok) {
+    throw new Error(`La eliminación de la persona respondió ${response.status}.`)
+  }
+}
