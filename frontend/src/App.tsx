@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { FormularioPersona } from './components/FormularioPersona'
 import { ListaPersonas } from './components/ListaPersonas'
 import { obtenerPersonas } from './services/personasApi'
 import type { Persona } from './types/persona'
@@ -38,6 +39,7 @@ function App() {
         <h1>Personas</h1>
         <p className="intro">Consulta la información de las personas registradas.</p>
       </header>
+      <FormularioPersona onPersonaCreada={(persona) => setPersonas((actuales) => [...actuales, persona])} />
       {cargando && <p role="status">Cargando personas...</p>}
       {error && <p role="alert">{error}</p>}
       {!cargando && !error && <ListaPersonas personas={personas} />}

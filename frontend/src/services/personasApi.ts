@@ -11,3 +11,17 @@ export async function obtenerPersonas(): Promise<Persona[]> {
 
   return response.json() as Promise<Persona[]>
 }
+
+export async function crearPersona(persona: Omit<Persona, 'id'>): Promise<Persona> {
+  const response = await fetch(PERSONAS_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(persona),
+  })
+
+  if (!response.ok) {
+    throw new Error(`La creación de la persona respondió ${response.status}.`)
+  }
+
+  return response.json() as Promise<Persona>
+}
