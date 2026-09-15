@@ -1,14 +1,18 @@
 package com.imqh.personas.domain;
 
 import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.NotBlank;
 
 @Embeddable
 public class Direccion {
 
+    @NotBlank
     private String calle;
 
+    @NotBlank
     private String comuna;
 
+    @NotBlank
     private String region;
 
     protected Direccion() {

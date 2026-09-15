@@ -6,6 +6,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 
 import java.time.LocalDate;
 
@@ -17,15 +20,21 @@ public class Persona {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
     private String rut;
 
+    @NotBlank
     private String nombre;
 
+    @NotBlank
     private String apellido;
 
+    @NotNull
+    @Past
     private LocalDate fechaNacimiento;
 
     @Embedded
+    @NotNull
     private Direccion direccion;
 
     protected Persona() {
