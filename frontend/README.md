@@ -1,8 +1,8 @@
 # Frontend de gestión de personas
 
 Frontend de la aplicación de gestión de personas. Actualmente muestra una pantalla inicial
-con un listado local de personas ficticias. La conexión con la API y las operaciones CRUD del
-frontend están pendientes.
+con un listado de personas obtenido desde la API. Las operaciones CRUD de creación, edición y
+eliminación del frontend están pendientes.
 
 ## Tecnologías
 
@@ -60,24 +60,33 @@ npm run preview
 - `src/components/ListaPersonas.tsx`: decide si muestra la lista o el estado vacío.
 - `src/components/TarjetaPersona.tsx`: muestra los datos de una persona.
 - `src/components/EmptyState.tsx`: mensaje reutilizable para una lista vacía.
-- `src/data/samplePeople.ts`: datos ficticios locales en memoria.
+- `src/services/personasApi.ts`: consulta HTTP del listado de personas.
 - `src/types/persona.ts`: tipos `Persona` y `Direccion`.
 - `src/App.css` y `src/index.css`: estilos de la pantalla.
 - `vite.config.ts`: configuración de Vite y su plugin de React.
 
 ## Pantalla inicial
 
-La pantalla muestra el título “Personas” y una tarjeta por cada registro local. Cada tarjeta
-incluye nombre, apellido, RUT, fecha de nacimiento, calle, comuna y región.
+La pantalla consulta `GET /api/personas` y muestra el título “Personas” junto con una tarjeta
+por cada registro devuelto. Cada tarjeta incluye nombre, apellido, RUT, fecha de nacimiento,
+calle, comuna y región.
+
+Durante el desarrollo, Vite redirige las solicitudes que comienzan por `/api` al backend local
+`http://localhost:8080`. Este proxy evita problemas de CORS entre los servidores de desarrollo.
+
+La pantalla contempla estos estados:
+
+- Carga: muestra “Cargando personas...” mientras espera la respuesta.
+- Éxito con registros: muestra las tarjetas de las personas recibidas.
+- Éxito con lista vacía: muestra “No hay personas registradas”.
+- Error: muestra “No fue posible cargar las personas.” ante un fallo de conexión o una respuesta
+  HTTP no exitosa.
 
 Cuando la colección de personas está vacía, `ListaPersonas` muestra el mensaje “No hay personas
 registradas” mediante `EmptyState`.
 
-Los datos actuales son ficticios y viven únicamente en memoria. No se guardan en una base de
-datos ni se recuperan desde un servicio externo.
-
-La conexión con la API, la consulta remota y las operaciones de creación, edición y eliminación
-del frontend se implementarán en tareas posteriores.
+Los datos del listado provienen actualmente de la API. La creación, edición y eliminación de
+personas desde el frontend se implementarán en tareas posteriores.
 
 ## Documentación oficial
 
