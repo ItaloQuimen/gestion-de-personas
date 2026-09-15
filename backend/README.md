@@ -1,65 +1,128 @@
 # Backend de gestión de personas
 
-API base para la gestión de personas. Actualmente contiene el proyecto Spring Boot,
-la configuración de conexión a MySQL y una prueba de carga del contexto. El modelo de
-personas, el esquema de tablas, los endpoints, las validaciones de negocio y la
-conservación ante caídas se implementarán en tareas posteriores.
+API REST para crear, consultar, actualizar y eliminar personas. El backend contiene el
+modelo JPA de `Persona` y `Direccion`, validaciones Bean Validation, persistencia con
+Spring Data JPA, DTOs de entrada y salida, endpoints CRUD y un manejador global para los
+errores de validación y de personas inexistentes.
 
-## 1. Requisitos
+La conservación automática de registros durante caídas de MySQL todavía está pendiente.
 
-- JDK 21. La versión comprobada es Eclipse Temurin 21.0.12.1.
-- Maven Wrapper 3.9.16, incluido en el proyecto.
-- MySQL Server 8.0 con una base preparada y conexión TLS disponible.
-- Acceso a Internet para descargar dependencias de Maven cuando no estén en caché.
+## Requisitos
 
-El proyecto usa Spring Boot 4.1.1, Spring Web MVC, Spring Data JPA, Validation y MySQL
-Connector/J. No se han añadido dependencias para el esquema ni para funcionalidades de
-personas.
+- Java 21. La versión comprobada es Eclipse Temurin 21.0.12.1.
+- Maven Wrapper incluido en `backend`. La versión efectiva comprobada es Maven 3.9.16.
+- MySQL Server 8.0. La instalación local comprobada es MySQL 8.0.46.
+- Acceso a Internet para descargar dependencias Maven cuando no estén en caché.
 
-## 2. Preparación de MySQL
+El proyecto usa Spring Boot 4.1.1, Spring Web MVC, Spring Data JPA, Bean Validation y
+MySQL Connector/J. Las versiones y dependencias efectivas están declaradas en `pom.xml`.
 
-La base de desarrollo se llama `gestion_personas` y utiliza `utf8mb4` con colación
-`utf8mb4_0900_ai_ci`. La cuenta de aplicación es `personas_app@localhost`, con
-autenticación `caching_sha2_password`.
+## Preparación de MySQL
 
-La cuenta debe conservar únicamente los permisos mínimos `SELECT`, `INSERT`, `UPDATE` y
-`DELETE` sobre `gestion_personas`. No requiere permisos administrativos, de creación de
-tablas ni de concesión de privilegios. Antes de preparar otra instalación, comprobar que
-la base y la cuenta no existan ya y revisar los permisos efectivos con `SHOW GRANTS`.
+La aplicación espera la base `gestion_personas`, con codificación `utf8mb4` y colación
+`utf8mb4_0900_ai_ci`. La cuenta de aplicación prevista es `personas_app@localhost`, con
+autenticación `caching_sha2_password` y únicamente estos permisos sobre la base:
 
-El esquema de tablas se definirá en una tarea separada. Esta aplicación no crea ni modifica
-tablas automáticamente.
+- `SELECT`
+- `INSERT`
+- `UPDATE`
+- `DELETE`
 
-## 3. Configuración externa
+La cuenta de aplicación no debe tener permisos administrativos, de creación de tablas ni
+de concesión de privilegios. La contraseña se define localmente en MySQL y nunca se escribe
+en este README.
 
-La configuración usa estas variables de entorno:
+### Crear la base y la tabla
 
-- `DB_URL`: opcional; por defecto `jdbc:mysql://localhost:3306/gestion_personas?sslMode=REQUIRED`.
-- `DB_USERNAME`: opcional; por defecto `personas_app`.
+Ejecuta estas sentencias con una cuenta administrativa o de preparación del esquema, no
+con `personas_app`:
+
+```sql
+CREATE DATABASE IF NOT EXISTS gestion_personas
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_0900_ai_ci;
+
+USE gestion_personas;
+
+CREATE TABLE IF NOT EXISTS personas (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    rut VARCHAR(50) NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    fecha_nacimiento DATE NOT NULL,
+    calle VARCHAR(150) NOT NULL,
+    comuna VARCHAR(100) NOT NULL,
+    region VARCHAR(100) NOT NULL,
+    PRIMARY KEY (id)
+);
+```
+
+Las longitudes del ejemplo coinciden con la tabla `personas` preparada actualmente.
+La entidad Java no fija estas longitudes mediante `@Column(length = ...)`; deben mantenerse
+coordinadas con el esquema cuando se modifique.
+
+### Crear o revisar la cuenta de aplicación
+
+Configura `personas_app@localhost` desde MySQL Workbench o con una cuenta administrativa,
+estableciendo la contraseña directamente en el cliente local. No escribas esa contraseña
+en archivos, comandos registrados, capturas ni el repositorio.
+
+Después concede únicamente los permisos de aplicación y comprueba el resultado:
+
+```sql
+GRANT SELECT, INSERT, UPDATE, DELETE
+ON gestion_personas.*
+TO 'personas_app'@'localhost';
+
+SHOW GRANTS FOR 'personas_app'@'localhost';
+```
+
+La creación de la base, la tabla y la cuenta es una preparación administrativa separada.
+La aplicación no crea ni modifica tablas: `spring.jpa.hibernate.ddl-auto=none` y
+`spring.sql.init.mode=never` están configurados para impedirlo.
+
+## Configuración externa
+
+La aplicación lee estas variables de entorno:
+
+- `DB_URL`: opcional. Valor local predeterminado:
+  `jdbc:mysql://localhost:3306/gestion_personas?sslMode=REQUIRED`.
+- `DB_USERNAME`: opcional. Valor local predeterminado: `personas_app`.
 - `DB_PASSWORD`: obligatoria y sin valor predeterminado.
 
-La contraseña se introduce en la configuración local de ejecución y no se guarda en este
-repositorio. No escribirla en archivos versionados, argumentos de comandos, capturas ni
-registros.
+`sslMode=REQUIRED` mantiene TLS habilitado. Esta opción exige cifrado, pero no configura
+la verificación de identidad del certificado del servidor.
 
-## 4. Ejecución desde IntelliJ IDEA
-
-En la configuración de `BackendApplication` y en la de `BackendApplicationTests`, añade
-la variable de entorno `DB_PASSWORD` con la contraseña local de `personas_app`. Mantén
-`DB_URL` y `DB_USERNAME` sin definir para usar sus valores locales predeterminados, o
-configúralas si tu instancia utiliza otro host o puerto. Ejecuta cada configuración desde
-IntelliJ con el JDK 21 del proyecto.
-
-El arranque correcto debe mostrar `Started BackendApplication`. La prueba correcta debe
-finalizar con código 0 y mostrar que el contexto se cargó. Estos resultados comprueban la
-conexión y el contexto, no una funcionalidad de personas.
-
-## 5. Ejecución desde terminal
-
-Desde esta carpeta (`backend`), configura el JDK y la contraseña solo en la sesión actual:
+Ejemplo de variables no secretas en PowerShell:
 
 ```powershell
-$env:JAVA_HOME = 'C:\ruta\a\jdk-21'
+$env:DB_URL = 'jdbc:mysql://localhost:3306/gestion_personas?sslMode=REQUIRED'
+$env:DB_USERNAME = 'personas_app'
+```
+
+Configura `DB_PASSWORD` únicamente en la configuración local de IntelliJ o en la sesión
+de terminal que vaya a ejecutar Maven. No la incluyas en el repositorio.
+
+## Ejecución desde IntelliJ IDEA
+
+1. Abre la carpeta `backend` como proyecto Maven.
+2. Selecciona el JDK 21 del proyecto.
+3. En la configuración de `BackendApplication`, define `DB_PASSWORD` como variable de
+   entorno local. Puedes definir también `DB_URL` y `DB_USERNAME` si no usarás los valores
+   predeterminados.
+4. Ejecuta `BackendApplication`.
+
+Para comprobar el contexto, configura la misma variable `DB_PASSWORD` en la ejecución de
+`BackendApplicationTests` y ejecuta la prueba generada `contextLoads`.
+
+## Ejecución desde Maven Wrapper
+
+Desde la carpeta `backend`, configura Java 21 y las variables necesarias en la sesión
+actual. Introduce la contraseña de forma local y evita escribirla en el comando:
+
+```powershell
+$env:JAVA_HOME = 'C:/ruta/a/jdk-21'
+$env:Path = "$env:JAVA_HOME\bin;$env:Path"
 & "$env:JAVA_HOME\bin\java.exe" -version
 .\mvnw.cmd -v
 
@@ -72,29 +135,109 @@ try {
 finally {
     Remove-Item Env:DB_PASSWORD -ErrorAction SilentlyContinue
     $clavePersonas.Dispose()
-    Remove-Variable clavePersonas
+    Remove-Variable clavePersonas -ErrorAction SilentlyContinue
 }
 ```
 
-El comando de prueba disponible es `contextLoads`, en `BackendApplicationTests`. Para
-detener el servidor iniciado por `spring-boot:run`, usa Ctrl+C. La aplicación usa el
-puerto HTTP 8080 por defecto.
+La prueba disponible es `BackendApplicationTests.contextLoads`. El servidor HTTP usa el
+puerto `8080` por defecto y se detiene con Ctrl+C.
 
-## 6. Supuestos, límites y pendientes
+## API REST
 
-- `spring.jpa.hibernate.ddl-auto=none` impide que Hibernate genere o modifique el esquema.
-- `spring.sql.init.mode=never` impide la ejecución automática de scripts SQL.
-- La conexión actual exige cifrado mediante `sslMode=REQUIRED`; no configura todavía
-  verificación de identidad del certificado.
-- La cuenta de aplicación mantiene permisos limitados y no se elevan para arrancar.
-- No hay entidades, tablas, endpoints, CRUD, reglas de negocio ni recuperación automática
-  ante caídas implementados.
-- La ejecución desde una copia limpia y la preparación reproducible del esquema quedan
-  pendientes de sus tareas correspondientes.
+La base URL local es `http://localhost:8080`.
 
-## 7. Referencias técnicas
+| Método | Ruta | Resultado esperado |
+| --- | --- | --- |
+| GET | `/api/personas` | Lista personas, `200 OK` |
+| GET | `/api/personas/{id}` | Devuelve una persona, `200 OK` |
+| POST | `/api/personas` | Crea una persona, `201 Created` |
+| PUT | `/api/personas/{id}` | Actualiza una persona, `200 OK` |
+| DELETE | `/api/personas/{id}` | Elimina una persona, `204 No Content` |
 
-- [Configuración externa de Spring Boot](https://docs.spring.io/spring-boot/reference/features/external-config.html).
-- [Inicialización de bases de datos en Spring Boot](https://docs.spring.io/spring-boot/how-to/data-initialization.html).
-- [Seguridad de MySQL Connector/J](https://dev.mysql.com/doc/connector-j/en/connector-j-connp-props-security.html).
-- [SHOW GRANTS de MySQL](https://dev.mysql.com/doc/refman/8.0/en/show-grants.html).
+### Crear una persona
+
+Solicitud:
+
+```http
+POST http://localhost:8080/api/personas
+Content-Type: application/json
+
+{
+  "rut": "12.345.678-5",
+  "nombre": "Ana",
+  "apellido": "Pérez",
+  "fechaNacimiento": "1990-05-12",
+  "direccion": {
+    "calle": "Av. Central 123",
+    "comuna": "Santiago",
+    "region": "Metropolitana"
+  }
+}
+```
+
+Respuesta `201 Created`:
+
+```json
+{
+  "id": 1,
+  "rut": "12.345.678-5",
+  "nombre": "Ana",
+  "apellido": "Pérez",
+  "fechaNacimiento": "1990-05-12",
+  "direccion": {
+    "calle": "Av. Central 123",
+    "comuna": "Santiago",
+    "region": "Metropolitana"
+  }
+}
+```
+
+### Actualizar una persona
+
+Usa el mismo formato de entrada con `PUT /api/personas/{id}`. El identificador de la URL
+determina la persona que se actualiza; el cuerpo no incluye `id`.
+
+### Errores y validaciones
+
+El backend valida que RUT, nombre, apellido, calle, comuna y región no estén vacíos; que
+fecha de nacimiento y dirección existan; y que la fecha de nacimiento sea anterior a hoy.
+Todavía no valida el dígito verificador del RUT, catálogos de comuna o región, ni la
+unicidad del RUT en la base de datos.
+
+Los errores de validación responden `400 Bad Request`. Una persona inexistente responde
+`404 Not Found`. El formato es:
+
+```json
+{
+  "estado": 400,
+  "mensaje": "nombre: no debe estar vacío",
+  "fechaHora": "2026-09-15T13:30:00"
+}
+```
+
+La fecha y hora se generan en el servidor. Otros errores todavía usan el manejo estándar
+de Spring y requieren una decisión específica.
+
+## Supuestos, observaciones y límites
+
+- La cuenta `personas_app` se limita a operaciones CRUD sobre `gestion_personas`.
+- El esquema no se genera ni se modifica automáticamente por la aplicación.
+- El ejemplo de tabla usa los nombres derivados del mapeo JPA actual, incluida
+  `fecha_nacimiento` y las columnas embebidas de `Direccion`.
+- La conexión TLS está configurada con `sslMode=REQUIRED`; la validación del certificado
+  del servidor queda pendiente de una configuración específica.
+- No existe todavía paginación, autenticación, autorización ni documentación OpenAPI.
+- No se han añadido pruebas HTTP funcionales en esta tarea.
+- La conservación y el guardado automático de registros cuando MySQL está caído todavía
+  están pendientes; no deben considerarse implementados ni comprobados.
+
+## Referencias técnicas
+
+- [Configuración externa de Spring Boot](https://docs.spring.io/spring-boot/reference/features/external-config.html)
+- [Validación en Spring MVC](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-validation.html)
+- [Spring Data JPA](https://docs.spring.io/spring-data/jpa/reference/)
+- [Inicialización de bases de datos en Spring Boot](https://docs.spring.io/spring-boot/how-to/data-initialization.html)
+- [Seguridad de MySQL Connector/J](https://dev.mysql.com/doc/connector-j/en/connector-j-connp-props-security.html)
+- [CREATE TABLE de MySQL](https://dev.mysql.com/doc/refman/8.0/en/create-table.html)
+- [GRANT de MySQL](https://dev.mysql.com/doc/refman/8.0/en/grant.html)
+- [SHOW GRANTS de MySQL](https://dev.mysql.com/doc/refman/8.0/en/show-grants.html)
