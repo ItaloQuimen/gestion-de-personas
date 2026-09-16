@@ -1,4 +1,5 @@
 import type { Persona } from '../types/persona'
+import { calcularEdad } from '../utils/calcularEdad'
 
 type TarjetaPersonaProps = {
   persona: Persona
@@ -7,6 +8,8 @@ type TarjetaPersonaProps = {
 }
 
 export function TarjetaPersona({ persona, onEditar, onEliminar }: TarjetaPersonaProps) {
+  const edad = calcularEdad(persona.fechaNacimiento)
+
   return (
     <li className="person-card">
       <h2>{persona.nombre} {persona.apellido}</h2>
@@ -18,6 +21,10 @@ export function TarjetaPersona({ persona, onEditar, onEliminar }: TarjetaPersona
         <div>
           <dt>Fecha de nacimiento</dt>
           <dd>{persona.fechaNacimiento}</dd>
+        </div>
+        <div>
+          <dt>Edad</dt>
+          <dd>{edad} {edad === 1 ? 'año' : 'años'}</dd>
         </div>
         <div>
           <dt>Dirección</dt>

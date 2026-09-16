@@ -71,6 +71,7 @@ El servicio `src/services/personasApi.ts` utiliza las APIs HTTP del navegador pa
 La pantalla permite:
 
 - Consultar las personas registradas.
+- Ver la edad actual calculada desde la fecha de nacimiento.
 - Registrar una persona con sus datos y dirección.
 - Editar una persona existente y guardar los cambios.
 - Eliminar una persona después de una confirmación.
@@ -79,10 +80,14 @@ El formulario valida que todos sus campos estén completos, que el RUT no esté 
 fecha de nacimiento sea válida y anterior a la fecha actual. Las validaciones del backend siguen
 siendo la autoridad para aceptar cada solicitud.
 
+La edad no se almacena ni se recibe como un campo adicional de la API. Se calcula en el
+navegador usando la fecha de nacimiento y la fecha actual. Para una persona nacida el 29 de
+febrero, el cumpleaños se considera el 1 de marzo durante los años no bisiestos.
+
 ## 7. Estados visibles
 
 - Carga: muestra `Cargando personas...` mientras se consulta el listado.
-- Éxito con registros: muestra una tarjeta por persona.
+- Éxito con registros: muestra una tarjeta por persona con su edad actual.
 - Lista vacía: muestra `No hay personas registradas`.
 - Creación exitosa: muestra `Persona creada correctamente.` y actualiza el listado.
 - Edición exitosa: muestra `Persona actualizada correctamente.` y actualiza el listado.
@@ -100,6 +105,7 @@ siendo la autoridad para aceptar cada solicitud.
 - `src/components/EmptyState.tsx`: mensaje para una lista vacía.
 - `src/services/personasApi.ts`: funciones de comunicación con la API.
 - `src/types/persona.ts`: tipos `Persona` y `Direccion`.
+- `src/utils/calcularEdad.ts`: cálculo de edad y regla para nacimientos el 29 de febrero.
 - `src/App.css` y `src/index.css`: estilos de la interfaz.
 - `vite.config.ts`: plugin de React y proxy de desarrollo.
 
