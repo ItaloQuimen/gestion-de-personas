@@ -2,6 +2,7 @@ package com.imqh.personas.controller;
 
 import com.imqh.personas.dto.PersonaRequest;
 import com.imqh.personas.dto.PersonaResponse;
+import com.imqh.personas.dto.SolicitudCreacionResponse;
 import com.imqh.personas.service.PersonaService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -38,8 +39,8 @@ public class PersonaController {
     }
 
     @PostMapping
-    public ResponseEntity<PersonaResponse> crear(@Valid @RequestBody PersonaRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
+    public ResponseEntity<SolicitudCreacionResponse> crear(@Valid @RequestBody PersonaRequest request) {
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
                 .body(personaService.crear(request));
     }
 

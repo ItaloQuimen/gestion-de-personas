@@ -95,12 +95,15 @@ export function FormularioPersona({ personaEnEdicion, onPersonaGuardada, onCance
 
     setEnviando(true)
     try {
-      const personaGuardada = personaEnEdicion
-        ? await actualizarPersona(personaEnEdicion.id, datos)
-        : await crearPersona(datos)
-      onPersonaGuardada(personaGuardada)
+      if (personaEnEdicion) {
+        const personaGuardada = await actualizarPersona(personaEnEdicion.id, datos)
+        onPersonaGuardada(personaGuardada)
+        setMensaje('Persona actualizada correctamente.')
+      } else {
+        const solicitud = await crearPersona(datos)
+        setMensaje(`Solicitud de creación recibida (${solicitud.solicitudId}).`)
+      }
       setDatos(formularioInicial)
-      setMensaje(personaEnEdicion ? 'Persona actualizada correctamente.' : 'Persona creada correctamente.')
     } catch {
       setError(personaEnEdicion ? 'No fue posible actualizar la persona.' : 'No fue posible crear la persona.')
     } finally {

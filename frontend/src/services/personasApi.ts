@@ -2,6 +2,11 @@ import type { Persona } from '../types/persona'
 
 const PERSONAS_ENDPOINT = '/api/personas'
 
+export type SolicitudCreacion = {
+  solicitudId: string
+  estado: 'PENDIENTE'
+}
+
 export async function obtenerPersonas(): Promise<Persona[]> {
   const response = await fetch(PERSONAS_ENDPOINT)
 
@@ -12,7 +17,7 @@ export async function obtenerPersonas(): Promise<Persona[]> {
   return response.json() as Promise<Persona[]>
 }
 
-export async function crearPersona(persona: Omit<Persona, 'id'>): Promise<Persona> {
+export async function crearPersona(persona: Omit<Persona, 'id'>): Promise<SolicitudCreacion> {
   const response = await fetch(PERSONAS_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -23,7 +28,7 @@ export async function crearPersona(persona: Omit<Persona, 'id'>): Promise<Person
     throw new Error(`La creación de la persona respondió ${response.status}.`)
   }
 
-  return response.json() as Promise<Persona>
+  return response.json() as Promise<SolicitudCreacion>
 }
 
 export async function actualizarPersona(id: number, persona: Omit<Persona, 'id'>): Promise<Persona> {

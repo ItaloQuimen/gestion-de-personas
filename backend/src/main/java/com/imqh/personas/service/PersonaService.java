@@ -1,11 +1,15 @@
 package com.imqh.personas.service;
 
-import com.imqh.personas.domain.Persona;
 import com.imqh.personas.domain.Direccion;
+import com.imqh.personas.domain.Persona;
 import com.imqh.personas.dto.PersonaRequest;
 import com.imqh.personas.dto.PersonaResponse;
+import com.imqh.personas.dto.SolicitudCreacionResponse;
+import com.imqh.personas.messaging.PersonaCreationPublisher;
+import com.imqh.personas.messaging.PersonaCreacionMensaje;
 import com.imqh.personas.repository.PersonaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -14,9 +18,13 @@ import java.util.NoSuchElementException;
 public class PersonaService {
 
     private final PersonaRepository personaRepository;
+    private final PersonaCreationPublisher personaCreationPublisher;
 
-    public PersonaService(PersonaRepository personaRepository) {
+    public PersonaService(
+            PersonaRepository personaRepository,
+            PersonaCreationPublisher personaCreationPublisher) {
         this.personaRepository = personaRepository;
+        this.personaCreationPublisher = personaCreationPublisher;
     }
 
     public List<PersonaResponse> listar() {
@@ -30,8 +38,10 @@ public class PersonaService {
                 .orElseThrow(() -> personaNoEncontrada(id)));
     }
 
-    public PersonaResponse crear(PersonaRequest request) {
-        return PersonaResponse.from(personaRepository.save(toPersona(request)));
+    public SolicitudCreacionResponse crear(PersonaRequest request) {
+        PersonaCreacionMensaje mensaje = PersonaCreacionMensaje.from(request);
+        personaCreationPublisher.publicar(mensaje);
+        return new SolicitudCreacionResponse(mensaje.solicitudId(), "PENDIENTE");
     }
 
     public PersonaResponse actualizar(Long id, PersonaRequest request) {
@@ -52,17 +62,29 @@ public class PersonaService {
         personaRepository.deleteById(id);
     }
 
+    @Transactional
+    public void procesarCreacion(PersonaCreacionMensaje mensaje) {
+        if (personaRepository.existsBySolicitudId(mensaje.solicitudId())) {
+            return;
+        }
+        personaRepository.save(toPersona(mensaje));
+    }
+
     private NoSuchElementException personaNoEncontrada(Long id) {
         return new NoSuchElementException("Persona no encontrada: " + id);
     }
 
-    private Persona toPersona(PersonaRequest request) {
+    private Persona toPersona(PersonaCreacionMensaje mensaje) {
         return new Persona(
-                request.rut(),
-                request.nombre(),
-                request.apellido(),
-                request.fechaNacimiento(),
-                toDireccion(request.direccion()));
+                mensaje.solicitudId(),
+                mensaje.rut(),
+                mensaje.nombre(),
+                mensaje.apellido(),
+                mensaje.fechaNacimiento(),
+                new Direccion(
+                        mensaje.direccion().calle(),
+                        mensaje.direccion().comuna(),
+                        mensaje.direccion().region()));
     }
 
     private Direccion toDireccion(PersonaRequest.DireccionRequest request) {

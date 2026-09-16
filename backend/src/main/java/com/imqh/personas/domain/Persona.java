@@ -1,5 +1,6 @@
 package com.imqh.personas.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,6 +20,9 @@ public class Persona {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "solicitud_id", nullable = false, unique = true, updatable = false, length = 36)
+    private String solicitudId;
 
     @NotBlank
     private String rut;
@@ -41,11 +45,13 @@ public class Persona {
     }
 
     public Persona(
+            String solicitudId,
             String rut,
             String nombre,
             String apellido,
             LocalDate fechaNacimiento,
             Direccion direccion) {
+        this.solicitudId = solicitudId;
         this.rut = rut;
         this.nombre = nombre;
         this.apellido = apellido;
@@ -55,6 +61,10 @@ public class Persona {
 
     public Long getId() {
         return id;
+    }
+
+    public String getSolicitudId() {
+        return solicitudId;
     }
 
     public String getRut() {

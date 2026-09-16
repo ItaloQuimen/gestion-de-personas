@@ -26,4 +26,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(404)
                 .body(ErrorResponse.of(404, exception.getMessage()));
     }
+
+    @ExceptionHandler(RabbitMqUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleRabbitMqUnavailable(RabbitMqUnavailableException exception) {
+        return ResponseEntity.status(503)
+                .body(ErrorResponse.of(503, exception.getMessage()));
+    }
 }
